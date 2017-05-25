@@ -21,6 +21,21 @@ sys_exit(void)
 }
 
 int
+sys_v2p(void)
+{
+  int _virtual;
+  int* _physical;
+
+  if(argint(0, &_virtual) < 0)
+    return -1;
+  if(argptr(1, &_physical) < 0)
+    return -1;
+
+  v2p(_virtual,_physical);
+  return 0;
+}
+
+int
 sys_wait(void)
 {
   return wait();

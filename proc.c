@@ -85,7 +85,7 @@ userinit(void)
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
   p = allocproc();
-  
+
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
     panic("userinit: out of memory?");
@@ -224,6 +224,16 @@ exit(void)
   sched();
   panic("zombie exit");
 }
+
+//v2p takes a virtual address and returns a physical address.
+//v2p should return an error if the virtual address is not
+//valid (e.g., out of range) or not mapped.
+void
+v2p(int virtual, int *physical)
+{
+
+}
+
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
