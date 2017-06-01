@@ -28,11 +28,10 @@ sys_v2p(void)
 
   if(argint(0, &_virtual) < 0)
     return -1;
-  if(argptr(1, &_physical) < 0)
+  if(argptr(1, (char **) &_physical, sizeof(int*)) < 0)
     return -1;
 
-  v2p(_virtual,_physical);
-  return 0;
+  return v2p(_virtual,_physical);
 }
 
 int

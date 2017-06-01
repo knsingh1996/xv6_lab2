@@ -228,10 +228,33 @@ exit(void)
 //v2p takes a virtual address and returns a physical address.
 //v2p should return an error if the virtual address is not
 //valid (e.g., out of range) or not mapped.
-void
+int
 v2p(int virtual, int *physical)
 {
+  struct proc *p;
+  pde_t *pde;
+  int _phys;
 
+  acquire(&ptable.lock);
+  p = ptable.proc;
+  pde_t *pgdir = p->pgdir;
+
+
+  if(pgdir == 0){
+    release(&ptable.lock);
+    return -1;
+  }
+
+  pde = &pgdir[PDX(virtual)];
+  if(*pde & PTE_P){
+    _phys = V2P(virtual);
+    *physical = _phys;
+  } else {
+    release(&ptable.lock);
+    return -1;
+  }
+  release(&ptable.lock);
+  return _phys;
 }
 
 
