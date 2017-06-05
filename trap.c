@@ -78,6 +78,32 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
 
+  case T_PGFLT:
+    if(proc->tf->esp < proc->stackAddr){
+      int heap = (proc->stackAddr - proc->sz)/4096;
+
+      int userpg = (proc->stackAddr - proc->tf->esp)/4096;
+      userpg = userpg + 1;
+
+ 		  if(userpg > (heap-1)){
+ 			  goto bad;
+ 		  }
+
+ 		  for(int i=0 ; i<userpg ; i++){
+ 			  allocuvm(proc->pgdir, proc->stackAddr-PGSIZE, proc->stackAddr);
+ 			  proc->stackAddr = proc->stackAddr-PGSIZE;
+ 		  }
+ 		  break;
+ 	  }
+
+ 	  bad:
+ 	  cprintf("pid %d %s: trap %d err %d on cpu %d "
+ 				  "eip 0x%x addr 0x%x--kill proc\n",
+ 				  proc->pid, proc->name, tf->trapno, tf->err, cpunum(), tf->eip,
+ 				  rcr2());
+ 	   proc->killed = 1;
+ 	 break;
+
   //PAGEBREAK: 13
   default:
     if(proc == 0 || (tf->cs&3) == 0){

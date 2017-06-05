@@ -37,7 +37,8 @@ exec(char *path, char **argv)
     goto bad;
 
   // Load program into memory.
-  sz = 0;
+  sz = 4096;
+  
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;
@@ -58,15 +59,24 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
-  // Allocate two pages at the next page boundary.
-  // Make the first inaccessible.  Use the second as the user stack.
-  sz = PGROUNDUP(sz);
-  if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
-    goto bad;
-  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
-  sp = sz;
+  // // Allocate two pages at the next page boundary.
+  // // Make the first inaccessible.  Use the second as the user stack.
+  // sz = PGROUNDUP(sz);
+  // if((sz = allocuvm(pgdir, sz, sz + 2*PGSIZE)) == 0)
+  //   goto bad;
+  // clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  // sp = sz;
+  //
+  // // Push argument strings, prepare rest of stack in ustack.
+  //
 
-  // Push argument strings, prepare rest of stack in ustack.
+  uint temp = allocuvm(pgdir, USERTOP - PGSIZE, USERTOP);
+
+  if(temp == 0){
+    panic("FAILED TO SET sp");
+  }
+
+  sp = temp;
   for(argc = 0; argv[argc]; argc++) {
     if(argc >= MAXARG)
       goto bad;
@@ -92,6 +102,7 @@ exec(char *path, char **argv)
   safestrcpy(proc->name, last, sizeof(proc->name));
 
   // Commit to the user image.
+  proc->stackAddr = USERTOP - PGSIZE;
   oldpgdir = proc->pgdir;
   proc->pgdir = pgdir;
   proc->sz = sz;
